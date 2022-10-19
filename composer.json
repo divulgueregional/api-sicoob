@@ -1,0 +1,19 @@
+{
+    "name": "divulgueregional/api-sicoob",
+    "description": "API para gerar boletos do Banco do Sicoob",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Divulgueregional\\ApiSicoob\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Roseno Matos",
+            "email": "roseno@divulgueregional.com.br"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^7.0"
+    }
+}
