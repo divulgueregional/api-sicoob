@@ -2,11 +2,11 @@
 
 ## Introdução
 
-Esse projeto foi implementado pela documentação Guia do Sicoob Open Banking para associado peddos jurídica. Essa biblioteca pode ser facilmente integrada ao seu software e/ou ERP.
+Esse projeto foi implementado pela documentação Guia do Sicoob Open Banking para associado pessoa jurídica. Essa biblioteca pode ser facilmente integrada ao seu software e/ou ERP.
 
 ## Como usar:
 <b>Instalação: </b>
-Ainda em estudo
+Aguarde ... analisando geração dos certificados
 <!-- Para utilizar a biblioteca através do composer:
 ```php
 composer require divulgueregional/api-sicoob
@@ -30,14 +30,14 @@ Acesse a pasta docs e leia o README.md -->
 - consulta dados de um boleto
 - consultar dados do boleto por pagador
 - segunda via de um boleto
-- faixas nosso numero disponivel
+- faixas nosso número disponível
 - prorrogar data vencimento de um boleto
 - prorrogar data limite de um boleto
 - alterar descontos do boleto
 - alterar abatimentos do boleto
 - alterar multa do boleto
 - alterar juros Mora do boleto
-- aletrar valor Nominal do boleto
+- alterar valor Nominal do boleto
 - alterar seu número no boleto
 - alterar especie documento do boleto
 - dar baixa do boleto
@@ -58,13 +58,13 @@ Acesse a pasta docs e leia o README.md -->
 
 - protestar um boleto
 - cancelar um protesto de um boleto
-- desistirProtestoBoleto
+- desistir Protestar um boleto
 
-<b>MIVIMENTAÇÃO</b><br>
+<b>MOVIMENTAÇÃO</b><br>
 
-- solicitarMovimentacao
-- consultarMovimentacao
-- downloadMovimentacao
+- solicitar movimentação
+- consultar a solicitação da movimentação
+- download do arquivo da movimentação
 
 ## Autor:
 Roseno Matos (developer) rosenomatos@gmail.com<br>
