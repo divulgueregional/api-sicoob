@@ -2,7 +2,7 @@
 
 ## Introdução
 
-Esse projeto foi implementado pela documentação Guia do Sicoob Open Banking. Essa biblioteca pode ser facilmente integrada ao seu software e/ou ERP.
+Esse projeto foi implementado pela documentação Guia do Sicoob Open Banking para associado peddos jurídica. Essa biblioteca pode ser facilmente integrada ao seu software e/ou ERP.
 
 ## Como usar:
 <b>Instalação: </b>
@@ -20,42 +20,51 @@ composer update divulgueregional/api-sicoob 1.0.0
 <!-- ## Documentação:
 Acesse a pasta docs e leia o README.md -->
 
-<!-- ## O QUE VOCÊ PODE UTILIZAR
+## O QUE VOCÊ PODE UTILIZAR
 <b>SEGURANÇA</b><br>
 - Gerar o token
 
-<b>COBRANÇA</b><br>
+<b>BOLETO</b><br>
 
-- Incluir/Registrar boleto de cobrança
-- Detalhar um boleto
-- Alterar dados de um boleto
-- Baixar Boleto
-- Boleto Em PDF (Em Produção)
-- Listar Boletos
-- Consultar pix de um boleto
-- Cancelar pix de um boleto
-- Gerar pix de um boleto (Falta fazer)
+- registrar um boleto
+- consulta dados de um boleto
+- consultar dados do boleto por pagador
+- segunda via de um boleto
+- faixas nosso numero disponivel
+- prorrogar data vencimento de um boleto
+- prorrogar data limite de um boleto
+- alterar descontos do boleto
+- alterar abatimentos do boleto
+- alterar multa do boleto
+- alterar juros Mora do boleto
+- aletrar valor Nominal do boleto
+- alterar seu número no boleto
+- alterar especie documento do boleto
+- dar baixa do boleto
+- rateio créditos
+- colocar o pix no boleto
 
-<b>PIX</b><br>
+<b>PAGADOR</b><br>
 
-- Criar cobrança. (Falta fazer)
-- Revisar cobrança. (Falta fazer)
-- Consultar cobrança. (Falta fazer)
-- Consultar Pix recebidos. (Falta fazer)
-- Consultar Pix. (Falta fazer)
-- Solicitar devolução. (Falta fazer)
-- Consultar devolução. (Falta fazer)
+- alterar dados do pagador
 
-<b>SIMULAÇÃO PAGAMENTO DE BOLETO E PIX</b><br>
+<b>NEGATIVAÇÃO</b><br>
 
-- Paga um boleto pela linha digitável. (Falta fazer)
-- Paga um boleto de pix. (Falta fazer) -->
+- negativar um pagador de um boleto
+- cancelar a negativação de um boleto
+- baixar a negativação de um boleto
 
-<!-- <b>WHEBHOOK</b><br>
+<b>PROTESTO</b><br>
 
-- Webhook é feito direto no portal do desenvolvedor
-- Após os testes concluídos é hora de habilitar o Webhook em produção. O Webhook é um serviço vinculado a uma aplicação, e essa deverá estar em produção.
-- No cadastro do evento é necessário especificar a URL que vai receber as requisições do Webhook. Além disso no caso de PIX é necessário informar a chave PIX, e no caso do Cobrança o convênio. -->
+- protestar um boleto
+- cancelar um protesto de um boleto
+- desistirProtestoBoleto
+
+<b>MIVIMENTAÇÃO</b><br>
+
+- solicitarMovimentacao
+- consultarMovimentacao
+- downloadMovimentacao
 
 ## Autor:
 Roseno Matos (developer) rosenomatos@gmail.com<br>

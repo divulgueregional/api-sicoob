@@ -1,2 +1,8 @@
 /vendor
 composer.lock
+/certs
+/path
+/docs/pdf
+/docs/cert
+/docs/cert.zip
+/docs/CobrancaBancaria.postman_collection
