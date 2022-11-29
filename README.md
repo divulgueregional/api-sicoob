@@ -6,8 +6,8 @@ Esse projeto foi implementado pela documentação Guia do Sicoob Open Banking pa
 
 ## Como usar:
 <b>Instalação: </b>
-Aguarde ... analisando geração dos certificados
-<!-- Para utilizar a biblioteca através do composer:
+
+Para utilizar a biblioteca através do composer:
 ```php
 composer require divulgueregional/api-sicoob
 ```
@@ -15,10 +15,10 @@ composer require divulgueregional/api-sicoob
 Pela última tag: </b>
 ```php
 composer update divulgueregional/api-sicoob 1.0.0
-``` -->
+```
 
-<!-- ## Documentação:
-Acesse a pasta docs e leia o README.md -->
+## Documentação:
+Acesse a pasta docs e leia o README.md
 
 ## O QUE VOCÊ PODE UTILIZAR
 <b>SEGURANÇA</b><br>
