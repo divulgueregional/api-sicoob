@@ -34,7 +34,7 @@ class Token{
         $options = $this->optionsRequest;
         $options['form_params'] = [
             'grant_type' => 'client_credentials',
-            'client_id' => '48c44f4d-ff78-431d-b59d-064cef41f70c',
+            'client_id' => $this->config['client_id'],
             'scope' => $this->esope($this->config)//'cobranca_boletos_consultar'
         ];
         try {
