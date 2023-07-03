@@ -30,7 +30,8 @@ class BankingSicoob{
             'headers' => [
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'x-sicoob-clientid' => $config['client_id']
+                'x-sicoob-clientid' => $config['client_id'],
+                'client_id' => $config['client_id']
             ],
             'cert' => $config['certificate'], 
             // 'verify' => false,
