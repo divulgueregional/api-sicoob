@@ -2,10 +2,10 @@
 
 namespace Divulgueregional\apisicoob;
 
-use Divulgueregional\ApiBbPhp\Exceptions\InternalServerErrorException;
-use Divulgueregional\ApiBbPhp\Exceptions\InvalidRequestException;
-use Divulgueregional\ApiBbPhp\Exceptions\ServiceUnavailableException;
-use Divulgueregional\ApiBbPhp\Exceptions\UnauthorizedException;
+use Divulgueregional\ApiSicoob\Exceptions\InternalServerErrorException;
+use Divulgueregional\ApiSicoob\Exceptions\InvalidRequestException;
+use Divulgueregional\ApiSicoob\Exceptions\ServiceUnavailableException;
+use Divulgueregional\ApiSicoob\Exceptions\UnauthorizedException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Exception;
