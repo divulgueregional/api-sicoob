@@ -37,28 +37,30 @@ class BankingSicoob
         $this->config = $config;
         if ($config['endPoints'] == self::END_POINT_PRODUCTION) {
             $this->urls = 'https://api.sicoob.com.br/';
+            $this->tokens = new Token($config);
+            $this->retornoTtoken = $this->tokens->getToken();
+            $this->token = $this->retornoTtoken['access_token'];
         }
         if ($config['endPoints'] == self::END_POINT_HOMOLOGATION) {
             $this->urls = 'https://sandbox.sicoob.com.br/sicoob/sandbox/';
+            $this->token = $this->config['token'];
         }
-        $this->uriCobranca = $this->urls . 'cobranca-bancaria/v2';
-        $this->uriContaCorrente = $this->urls . 'conta-corrente/v2';
+        $this->uriCobranca = $this->urls . 'cobranca-bancaria/v2/';
+        $this->uriContaCorrente = $this->urls . 'conta-corrente/v2/';
         $this->clientCobranca = new Client([
             'base_uri' => $this->uriCobranca,
         ]);
         $this->clientContaCorrente = new Client([
             'base_uri' => $this->uriContaCorrente,
         ]);
-        $this->tokens = new Token($config);
-        $this->retornoTtoken = $this->tokens->getToken();
-        $this->token = $this->retornoTtoken['access_token'];
 
         $this->optionsRequest = [
             'headers' => [
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'x-sicoob-clientid' => $config['client_id'],
-                'client_id' => $config['client_id']
+                'client_id' => $config['client_id'],
+                'Authorization' => "Bearer {$this->token}",
             ],
             'cert' => $config['certificate'],
             // 'verify' => false,
@@ -66,7 +68,7 @@ class BankingSicoob
         ];
     }
 
-    private function makeRequest($client, $method, $uri, $options, $errorMessage)
+    private function makeRequest(Client $client, $method, $uri, $options, $errorMessage)
     {
         try {
             $response = $client->request($method, $uri, $options);
@@ -121,7 +123,7 @@ class BankingSicoob
     ######################################################
     public function registrarBoleto(array $fields)
     {
-        $uri = "/boletos";
+        $uri = "boletos";
         $options = $this->optionsRequest;
         $options['body'] = json_encode($fields);
         $errorMessage = 'Falha ao incluir Boleto Cobranca';
@@ -137,9 +139,8 @@ class BankingSicoob
 
     public function consultarBoleto($filters)
     {
-        $uri = "/boletos";
+        $uri = "boletos";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['query'] = $filters;
 
         $errorMessage = 'Falha ao consultar Boleto';
@@ -154,9 +155,8 @@ class BankingSicoob
 
     public function boletoPorPagador($filters, String $numeroCpfCnpj)
     {
-        $uri = "/boletos/pagadores/{$numeroCpfCnpj}";
+        $uri = "boletos/pagadores/{$numeroCpfCnpj}";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['query'] = $filters;
 
         $errorMessage = 'Falha ao buscar Boleto por pagador';
@@ -171,9 +171,8 @@ class BankingSicoob
 
     public function segundaViaBoleto($filters)
     {
-        $uri = "/boletos/segunda-via";
+        $uri = "boletos/segunda-via";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['query'] = $filters;
 
         $errorMessage = 'Falha ao obter segunda via do Boleto';
@@ -188,9 +187,8 @@ class BankingSicoob
 
     public function faixasNossoNumeroDisponivel($filters)
     {
-        $uri = "/boletos/faixas-nosso-numero-disponiveis";
+        $uri = "boletos/faixas-nosso-numero-disponiveis";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['query'] = $filters;
 
         $errorMessage = 'Falha ao consultar faixas de Nosso Número disponíveis';
@@ -205,9 +203,8 @@ class BankingSicoob
 
     public function prorrogarDataVencimento($boletos)
     {
-        $uri = "/boletos/prorrogacoes/data-vencimento";
+        $uri = "boletos/prorrogacoes/data-vencimento";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao prorrogar data de vencimento do Boleto';
@@ -222,9 +219,8 @@ class BankingSicoob
 
     public function prorrogarDataLimite($boletos)
     {
-        $uri = "/boletos/prorrogacoes/data-limite-pagamento";
+        $uri = "boletos/prorrogacoes/data-limite-pagamento";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao prorrogar data limite de pagamento do Boleto';
@@ -239,9 +235,8 @@ class BankingSicoob
 
     public function descontosBoleto($boletos)
     {
-        $uri = "/boletos/descontos";
+        $uri = "boletos/descontos";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao aplicar descontos no Boleto';
@@ -256,9 +251,8 @@ class BankingSicoob
 
     public function abatimentosBoleto($boletos)
     {
-        $uri = "/boletos/abatimentos";
+        $uri = "boletos/abatimentos";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao aplicar abatimentos no Boleto';
@@ -273,9 +267,8 @@ class BankingSicoob
 
     public function multaBoleto($boletos)
     {
-        $uri = "/boletos/encargos/multa";
+        $uri = "boletos/encargos/multa";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao aplicar multa no Boleto';
@@ -290,9 +283,8 @@ class BankingSicoob
 
     public function jurosMoraBoleto($boletos)
     {
-        $uri = "/boletos/encargos/juros-mora";
+        $uri = "boletos/encargos/juros-mora";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao aplicar juros de mora no Boleto';
@@ -307,9 +299,8 @@ class BankingSicoob
 
     public function valorNominalBoleto($boletos)
     {
-        $uri = "/boletos/valor-nominal";
+        $uri = "boletos/valor-nominal";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao definir valor nominal do Boleto';
@@ -324,9 +315,8 @@ class BankingSicoob
 
     public function alterarSeuNumeroBoleto($boletos)
     {
-        $uri = "/boletos/seu-numero";
+        $uri = "boletos/seu-numero";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao alterar seu número do Boleto';
@@ -341,9 +331,8 @@ class BankingSicoob
 
     public function especieDocumentoBoleto($boletos)
     {
-        $uri = "/boletos/especie-documento";
+        $uri = "boletos/especie-documento";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao definir espécie do documento do Boleto';
@@ -359,9 +348,8 @@ class BankingSicoob
 
     public function baixaBoleto($boletos)
     {
-        $uri = "/boletos/baixa";
+        $uri = "boletos/baixa";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao efetuar baixa do Boleto';
@@ -376,9 +364,8 @@ class BankingSicoob
 
     public function rateioCreditos($boletos)
     {
-        $uri = "/boletos/rateiro-creditos";
+        $uri = "boletos/rateiro-creditos";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao realizar rateio de créditos do Boleto';
@@ -393,9 +380,8 @@ class BankingSicoob
 
     public function pixBoleto($boletos)
     {
-        $uri = "/boletos/pix";
+        $uri = "boletos/pix";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao pagar Boleto via PIX';
@@ -413,9 +399,8 @@ class BankingSicoob
     ###################################################
     public function alterarPagadores($boletos)
     {
-        $uri = "/pagadores";
+        $uri = "pagadores";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
 
         $errorMessage = 'Falha ao alterar pagadores do Boleto';
@@ -433,9 +418,8 @@ class BankingSicoob
     ######################################################
     public function negativarBoleto($boletos)
     {
-        $uri = "/boletos/negativacoes";
+        $uri = "boletos/negativacoes";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
         return $this->makeRequest(
             $this->clientCobranca,
@@ -448,9 +432,8 @@ class BankingSicoob
 
     public function cancelarNegativarBoleto($boletos)
     {
-        $uri = "/boletos/negativacoes";
+        $uri = "boletos/negativacoes";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
         return $this->makeRequest(
             $this->clientCobranca,
@@ -463,9 +446,8 @@ class BankingSicoob
 
     public function baixarNegativarBoleto($boletos)
     {
-        $uri = "/boletos/negativacoes";
+        $uri = "boletos/negativacoes";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
         return $this->makeRequest(
             $this->clientCobranca,
@@ -482,9 +464,8 @@ class BankingSicoob
     ######################################################
     public function protestarBoleto($boletos)
     {
-        $uri = "/boletos/protestos";
+        $uri = "boletos/protestos";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
         return $this->makeRequest(
             $this->clientCobranca,
@@ -497,9 +478,8 @@ class BankingSicoob
 
     public function cancelarProtestoBoleto($boletos)
     {
-        $uri = "/boletos/protestos";
+        $uri = "boletos/protestos";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
         return $this->makeRequest(
             $this->clientCobranca,
@@ -512,9 +492,8 @@ class BankingSicoob
 
     public function desistirProtestoBoleto($boletos)
     {
-        $uri = "/boletos/protestos";
+        $uri = "boletos/protestos";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($boletos);
         return $this->makeRequest(
             $this->clientCobranca,
@@ -531,9 +510,8 @@ class BankingSicoob
     ######################################################
     public function solicitarMovimentacao(array $filters)
     {
-        $uri = "/boletos/solicitacoes/movimentacao";
+        $uri = "boletos/solicitacoes/movimentacao";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['body'] = json_encode($filters);
         return $this->makeRequest(
             $this->clientCobranca,
@@ -546,9 +524,8 @@ class BankingSicoob
 
     public function consultarMovimentacao(array $filters)
     {
-        $uri = "/boletos/solicitacoes/movimentacao";
+        $uri = "boletos/solicitacoes/movimentacao";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['query'] = $filters;
         return $this->makeRequest(
             $this->clientCobranca,
@@ -561,9 +538,8 @@ class BankingSicoob
 
     public function downloadMovimentacao(array $filters)
     {
-        $uri = "/boletos/solicitacoes/movimentacao-download";
+        $uri = "boletos/solicitacoes/movimentacao-download";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['query'] = $filters;
         return $this->makeRequest(
             $this->clientCobranca,
@@ -576,9 +552,8 @@ class BankingSicoob
 
     public function saldo($filters)
     {
-        $uri = "/saldo";
+        $uri = "saldo";
         $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
         $options['query'] = $filters;
         return $this->makeRequest(
             $this->clientContaCorrente,
