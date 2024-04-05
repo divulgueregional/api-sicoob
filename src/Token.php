@@ -83,6 +83,9 @@ class Token
     ##############################################
     public function getToken()
     {
+        if (isset($this->config['token']) && $this->config['token'] != '') {
+            return $this->config['token'];
+        }
         $options = $this->optionsRequest;
         $options['form_params'] = [
             'grant_type' => 'client_credentials',
