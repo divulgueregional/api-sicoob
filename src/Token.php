@@ -6,7 +6,7 @@ use Exception;
 use Divulgueregional\ApiSicoob\Exceptions\InternalServerErrorException;
 use Divulgueregional\ApiSicoob\Exceptions\InvalidRequestException;
 use Divulgueregional\ApiSicoob\Exceptions\ServiceUnavailableException;
-use Divulgueregional\ApiSicoob\Exceptions\UnauthorizedException;
+use Divulgueregional\ApiSicoob\Exceptions\NotAcceptableException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 // use GuzzleHttp\Psr7\Message;
@@ -16,6 +16,11 @@ class Token
 {
     const BASE_URI = 'https://auth.sicoob.com.br';
     const TOKEN_ENDPOINT = '/auth/realms/cooperado/protocol/openid-connect/token';
+    const HTTP_EXCEPTION_TYPES = [
+        InvalidRequestException::HTTP_STATUS_CODE => InvalidRequestException::class,
+        NotAcceptableException::HTTP_STATUS_CODE => NotAcceptableException::class,
+        InternalServerErrorException::HTTP_STATUS_CODE => InternalServerErrorException::class,
+    ];
 
     private $config;
     private $client;
@@ -48,30 +53,17 @@ class Token
             $statusCode = $e->getResponse()->getStatusCode();
             $requestParameters = $e->getRequest();
             $bodyContent = json_decode($e->getResponse()->getBody()->getContents());
+            $message = $bodyContent->mensagens[0]->mensagem;
 
-            switch ($statusCode) {
-                case InvalidRequestException::HTTP_STATUS_CODE:
-                    $exception = new InvalidRequestException($bodyContent->erros[0]->mensagem);
-                    $exception->setRequestParameters($requestParameters);
-                    $exception->setBodyContent($bodyContent);
-                    throw $exception;
-                case UnauthorizedException::HTTP_STATUS_CODE:
-                    $exception = new UnauthorizedException($bodyContent->message);
-                    $exception->setRequestParameters($requestParameters);
-                    $exception->setBodyContent($bodyContent);
-                    throw $exception;
-                case InternalServerErrorException::HTTP_STATUS_CODE:
-                    $exception = new InternalServerErrorException($bodyContent->erros[0]->mensagem);
-                    $exception->setRequestParameters($requestParameters);
-                    $exception->setBodyContent($bodyContent);
-                    throw $exception;
-                case ServiceUnavailableException::HTTP_STATUS_CODE:
-                    $exception = new ServiceUnavailableException("SERVIÇO INDISPONÍVEL");
-                    $exception->setRequestParameters($requestParameters);
-                    throw $exception;
-                default:
-                    throw $e;
+            if (isset(self::HTTP_EXCEPTION_TYPES[$statusCode])) {
+                $exceptionClass = self::HTTP_EXCEPTION_TYPES[$statusCode];
+                $exception = new $exceptionClass($message);
+            } else {
+                $exception = $e;
             }
+            $exception->setRequestParameters($requestParameters);
+            $exception->setBodyContent($bodyContent);
+            throw $exception;
         } catch (Exception $e) {
             $response = $e->getMessage();
             return ['error' => "{$errorMessage}: {$response}"];

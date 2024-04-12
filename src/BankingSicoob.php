@@ -5,10 +5,11 @@ namespace Divulgueregional\apisicoob;
 use Divulgueregional\ApiSicoob\Exceptions\InternalServerErrorException;
 use Divulgueregional\ApiSicoob\Exceptions\InvalidRequestException;
 use Divulgueregional\ApiSicoob\Exceptions\ServiceUnavailableException;
-use Divulgueregional\ApiSicoob\Exceptions\UnauthorizedException;
+use Divulgueregional\ApiSicoob\Exceptions\NotAcceptableException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Exception;
+
 // use GuzzleHttp\Psr7\Message;
 // use JetBrains\PhpStorm\NoReturn;
 
@@ -20,10 +21,16 @@ class BankingSicoob
     const END_POINT_PRODUCTION = "1";
     const END_POINT_HOMOLOGATION = "2";
 
+    const HTTP_EXCEPTION_TYPES = [
+        InvalidRequestException::HTTP_STATUS_CODE => InvalidRequestException::class,
+        NotAcceptableException::HTTP_STATUS_CODE => NotAcceptableException::class,
+        InternalServerErrorException::HTTP_STATUS_CODE => InternalServerErrorException::class,
+    ];
+
     private $config;
     private $token;
     private $tokens;
-    private $retornoTtoken;
+    private $retornoToken;
     protected $urls;
     protected $uriCobranca;
     protected $uriContaCorrente;
@@ -34,17 +41,18 @@ class BankingSicoob
 
     function __construct($config)
     {
-        $this->config = $config;
         if ($config['endPoints'] == self::END_POINT_PRODUCTION) {
             $this->urls = 'https://api.sicoob.com.br/';
             $this->tokens = new Token($config);
-            $this->retornoTtoken = $this->tokens->getToken();
-            $this->token = $this->retornoTtoken['access_token'];
+            $this->retornoToken = $this->tokens->getToken();
+            $this->token = $this->retornoToken['access_token'];
+            $config['token'] = $this->token;
         }
         if ($config['endPoints'] == self::END_POINT_HOMOLOGATION) {
             $this->urls = 'https://sandbox.sicoob.com.br/sicoob/sandbox/';
-            $this->token = $this->config['token'];
+            $this->token = $config['token'];
         }
+
         $this->uriCobranca = $this->urls . 'cobranca-bancaria/v2/';
         $this->uriContaCorrente = $this->urls . 'conta-corrente/v2/';
         $this->clientCobranca = new Client([
@@ -66,6 +74,7 @@ class BankingSicoob
             // 'verify' => false,
             'ssl_key' => $config['certificateKey'],
         ];
+        $this->config = $config;
     }
 
     private function makeRequest(Client $client, $method, $uri, $options, $errorMessage)
@@ -79,23 +88,12 @@ class BankingSicoob
             $statusCode = $e->getResponse()->getStatusCode();
             $requestParameters = $e->getRequest();
             $bodyContent = json_decode($e->getResponse()->getBody()->getContents());
-
-            switch ($statusCode) {
-                case InvalidRequestException::HTTP_STATUS_CODE:
-                    $exception = new InvalidRequestException($bodyContent->erros[0]->mensagem);
-                    break;
-                case UnauthorizedException::HTTP_STATUS_CODE:
-                    $exception = new UnauthorizedException($bodyContent->message);
-                    break;
-                case InternalServerErrorException::HTTP_STATUS_CODE:
-                    $exception = new InternalServerErrorException($bodyContent->erros[0]->mensagem);
-                    break;
-                case ServiceUnavailableException::HTTP_STATUS_CODE:
-                    $exception = new ServiceUnavailableException("SERVIÇO INDISPONÍVEL");
-                    break;
-                default:
-                    $exception = $e;
-                    break;
+            $message = $bodyContent->mensagens[0]->mensagem;
+            if (isset(self::HTTP_EXCEPTION_TYPES[$statusCode])) {
+                $exceptionClass = self::HTTP_EXCEPTION_TYPES[$statusCode];
+                $exception = new $exceptionClass($message);
+            } else {
+                $exception = $e;
             }
             $exception->setRequestParameters($requestParameters);
             $exception->setBodyContent($bodyContent);
