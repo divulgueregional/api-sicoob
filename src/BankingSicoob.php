@@ -9,12 +9,11 @@ use Divulgueregional\ApiSicoob\Exceptions\NotAcceptableException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Exception;
+use Divulgueregional\ApiSicoob\Token;
 
 // use GuzzleHttp\Psr7\Message;
 // use JetBrains\PhpStorm\NoReturn;
 
-// use Divulgueregional\apisicoob\Token;
-require_once __DIR__ . '/Token.php';
 
 class BankingSicoob
 {
@@ -34,7 +33,6 @@ class BankingSicoob
     protected $urls;
     protected $uriCobranca;
     protected $uriContaCorrente;
-    protected $clientToken;
     protected $clientCobranca;
     protected $clientContaCorrente;
     protected $optionsRequest = [];
@@ -560,5 +558,21 @@ class BankingSicoob
             $options,
             "Falha ao consultar saldo da Conta Corrente"
         );
+    }
+
+    ######################################################
+    ############ UTILITÁRIO ##############################
+    ######################################################
+
+    public function setCertificatePfxContent($certificateContent, $certificatePassword)
+    {
+        $certificateTools = new CertificateTools(
+            $this->config['client_id'],
+            $certificateContent,
+            $certificatePassword
+        );
+
+        $this->optionsRequest['cert'] = $certificateTools->getCertificateFilePath();
+        $this->optionsRequest['ssl_key'] = $certificateTools->getPrivateKeyFilePath();
     }
 }
