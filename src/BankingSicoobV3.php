@@ -14,38 +14,36 @@ require_once __DIR__ . '/TokenV3.php';
 class BankingSicoobV3
 {
     private $config;
+    private $url;
     private $tokens;
     private $token;
     private $retornoTtoken;
     private $client;
+    private $client_id;
     private $optionsRequest;
 
-    function __construct($config, $sandbox = false)
+    function __construct($config)
     {
-        $this->config = $config;
-        $url = 'https://api.sicoob.com.br';
-        if ($sandbox) {
-            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        // print_r($config);
+        // die;
+        $this->config = (object) $config;
+        $this->url = 'https://api.sicoob.com.br';
+        if ($this->config->sandbox) {
+            $this->url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
             $this->token = '1301865f-c6bc-38f3-9f49-666dbcfc59c3';
+            $this->client_id = '9b5e603e428cc477a2841e2683c92d21';
         } else {
-            $this->tokens = new Token($config);
+            $this->tokens = new TokenV3($config);
             $this->retornoTtoken = $this->tokens->getToken();
+            // print_r($this->retornoTtoken);
+            // die;
             $this->token = $this->retornoTtoken['access_token'];
+            $this->client_id = $config['client_id'];
         }
-        $this->client = new Client([
-            'base_uri' => $url,
-        ]);
 
-        $this->optionsRequest = [
-            'headers' => [
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-                'x-sicoob-clientid' => $config['client_id']
-            ],
-            'cert' => $config['certificate'],
-            // 'verify' => false,
-            'ssl_key' => $config['certificateKey'],
-        ];
+        $this->client = new Client([
+            'base_uri' => $this->url,
+        ]);
     }
 
 
@@ -59,25 +57,34 @@ class BankingSicoobV3
         $this->token = $token;
     }
 
+    public function getToken()
+    {
+        return $this->token;
+    }
+
 
     ######################################################
     ############## COBRANÇAS #############################
     ######################################################
     public function registrarBoleto(array $fields)
     {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
         try {
             $response = $this->client->request(
                 'POST',
-                '/cobranca-bancaria/v2/boletos',
+                "{$url}/cobranca-bancaria/v3/boletos",
                 [
                     'headers' => [
                         'Content-Type' => 'application/json',
-                        'client_id' => $this->config['client_id'],
-                        'Authorization' => 'Bearer ' . $this->token . ''
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}"
                     ],
-                    'cert' => $this->config['certificate'],
+                    'cert' => $this->config->certificate,
                     // 'verify' => false,
-                    'ssl_key' => $this->config['certificateKey'],
+                    'ssl_key' => $this->config->certificateKey,
                     'body' => json_encode($fields),
                 ]
             );
@@ -93,485 +100,193 @@ class BankingSicoobV3
             return ($responseBodyAsString);
         } catch (\Exception $e) {
             $response = $e->getMessage();
-            return ['error' => "Falha ao incluir Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function consultarBoleto($filters)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['query'] = $filters;
-        try {
-            $response = $this->client->request(
-                'GET',
-                "/cobranca-bancaria/v2/boletos",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function boletoPorPagador($filters, String $numeroCpfCnpj)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['query'] = $filters;
-        try {
-            $response = $this->client->request(
-                'GET',
-                "/cobranca-bancaria/v2/boletos/pagadores/{$numeroCpfCnpj}",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function segundaViaBoleto($filters)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['query'] = $filters;
-        try {
-            $response = $this->client->request(
-                'GET',
-                "/cobranca-bancaria/v2/boletos/segunda-via",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function faixasNossoNumeroDisponivel($filters)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['query'] = $filters;
-        try {
-            $response = $this->client->request(
-                'GET',
-                "/cobranca-bancaria/v2/boletos/faixas-nosso-numero-disponiveis",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function prorrogarDataVencimento($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/prorrogacoes/data-vencimento",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function prorrogarDataLimite($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/prorrogacoes/data-limite-pagamento",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function descontosBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/descontos",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function abatimentosBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/abatimentos",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function multaBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/encargos/multa",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function jurosMoraBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/encargos/juros-mora",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function valorNominalBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/valor-nominal",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function alterarSeuNumeroBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/seu-numero",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function especieDocumentoBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/especie-documento",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function baixaBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/baixa",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function rateioCreditos($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/rateiro-creditos",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    public function pixBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/pix",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
-
-    ###################################################
-    ######### PAGADOR #################################
-    ###################################################
-    public function alterarPagadores($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PUT',
-                "/cobranca-bancaria/v2/pagadores",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
+            return ['error' => "{$response}"];
         }
     }
 
     ######################################################
-    ############## NEGATIVAÇÃO ###########################
+    ############## PDF DO BOLETO #########################
     ######################################################
-    public function negativarBoleto($boletos)
+    /* $params = [
+        'numeroCliente' => (int) $dados->integracao_contrato,
+        'codigoModalidade' => (int) 1,
+        'nossoNumero' => $receber->boleto_nossoNumero,
+        'linhaDigitavel' => $receber->boleto_linhaDigitavel,
+        'codigoBarras' => $receber->boleto_codigoBarras,
+        'gerarPdf' => true,
+        'numeroContratoCobranca' => $receber->boleto_codigoCobranca,
+    ];*/
+    public function segundaViaBoleto($params = [])
     {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
+        // Configuração do ambiente
+        $baseUrl = '';
+        if ($this->config->sandbox) {
+            $baseUrl = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        // Validação dos parâmetros obrigatórios
+        if (empty($params['numeroCliente'])) {
+            return ['error' => 'numeroCliente é obrigatório'];
+        }
+
+        if (empty($params['codigoModalidade'])) {
+            return ['error' => 'codigoModalidade é obrigatório'];
+        }
+
+        // Pelo menos um identificador do boleto deve ser informado
+        $identificadores = ['nossoNumero', 'linhaDigitavel', 'codigoBarras'];
+        $hasIdentifier = false;
+        foreach ($identificadores as $id) {
+            if (!empty($params[$id])) {
+                $hasIdentifier = true;
+                break;
+            }
+        }
+
+        if (!$hasIdentifier) {
+            return ['error' => 'Informe pelo menos um: nossoNumero, linhaDigitavel ou codigoBarras'];
+        }
+
+        try {
+            $response = $this->client->request(
+                'GET',
+                $baseUrl . '/cobranca-bancaria/v3/boletos/segunda-via',
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json'
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'query' => [
+                        'numeroCliente' => (int) $params['numeroCliente'],
+                        'codigoModalidade' => 1, //(int) 1,
+                        'nossoNumero' => $params['nossoNumero'],
+                        'linhaDigitavel' => $params['linhaDigitavel'],
+                        'codigoBarras' => $params['codigoBarras'],
+                        'gerarPdf' => true,
+                        'numeroContratoCobranca' => (int) $params['numeroContratoCobranca']
+                    ],
+                    'http_errors' => true // Para tratamento manual de erros
+                ]
+            );
+
+            $statusCode = $response->getStatusCode();
+            $responseBody = json_decode($response->getBody()->getContents());
+
+            // Tratamento de erros da API
+            if ($statusCode >= 400) {
+                $errorMessage = $responseBody->mensagens[0]->mensagem ?? 'Erro desconhecido na API Sicoob';
+                $errorCode = $responseBody->mensagens[0]->codigo ?? '0000';
+
+                return [
+                    'status' => $statusCode,
+                    'error' => $errorMessage,
+                    'error_code' => $errorCode,
+                    'api_response' => $responseBody
+                ];
+            }
+
+            // Retorno de sucesso
+            return [
+                'status' => $statusCode,
+                'data' => $responseBody
+            ];
+        } catch (\Exception $e) {
+            // Log do erro completo para debug
+            error_log('Erro na requisição de segunda via: ' . $e->getMessage());
+
+            return [
+                'error' => 'Erro na comunicação com a API Sicoob',
+                'exception' => $e->getMessage()
+            ];
+        }
+    }
+
+    /* $params = [
+        'numeroCliente' => (int) $dados->integracao_contrato,
+        'codigoModalidade' => (int) 1,
+        'linhaDigitavel' => $receber->boleto_linhaDigitavel,
+        'codigoBarras' => $receber->boleto_codigoBarras,
+        'numeroContratoCobranca' => $receber->boleto_codigoCobranca,
+    ]; */
+    public function consultarBoleto($params)
+    {
+        try {
+            $response = $this->client->request(
+                'GET',
+                "/cobranca-bancaria/v3/boletos",
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json'
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'query' => [
+                        'numeroCliente' => (int) $params['numeroCliente'],
+                        'codigoModalidade' => 1, //(int) 1,
+                        'linhaDigitavel' => $params['linhaDigitavel'],
+                        'codigoBarras' => $params['codigoBarras'],
+                        'numeroContratoCobranca' => (int) $params['numeroContratoCobranca']
+                    ],
+                    'http_errors' => true // Para tratamento manual de erros
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
+        }
+    }
+
+    /* $params = [
+        'numeroCliente' => (int) $dados->integracao_contrato,
+        'codigoModalidade' => (int) 1,
+        'nossoNumero' => $receber->boleto_nossoNumero,
+    ]; */
+    public function baixaBoleto($params)
+    {
+        $baseUrl =  $this->url;
+        if ($this->config->sandbox) {
+            $baseUrl = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        $boleto = (int) $params['nossoNumero'];
+        $numeroCliente = (int) $params['numeroCliente'];
         try {
             $response = $this->client->request(
                 'POST',
-                "/cobranca-bancaria/v2/boletos/negativacoes",
-                $options,
+                "{$baseUrl}/cobranca-bancaria/v3/boletos/{$boleto}/baixar",
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json'
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'body' => json_encode([
+                        'numeroCliente' => $numeroCliente,
+                        'codigoModalidade' => 1
+                    ]),
+                    'http_errors' => true // Para tratamento manual de erros
+                ]
             );
             $statusCode = $response->getStatusCode();
             $result = json_decode($response->getBody()->getContents());
@@ -589,16 +304,76 @@ class BankingSicoobV3
         }
     }
 
-    public function cancelarNegativarBoleto($boletos)
+    /* $params = [
+        'numeroCliente' => (int) $dados->integracao_contrato,
+        'codigoModalidade' => (int) 1,
+        'linhaDigitavel' => $receber->boleto_linhaDigitavel,
+        'codigoBarras' => $receber->boleto_codigoBarras,
+        'numeroContratoCobranca' => $receber->boleto_codigoCobranca,
+    ]; */
+    public function listar_boleto($params)
     {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
+        try {
+            $response = $this->client->request(
+                'GET',
+                "/cobranca-bancaria/v3/pagadores/{$params['numeroCpfCnpj']}/boletos",
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json'
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'query' => [
+                        'numeroCliente' => (int) $params['numeroCliente'],
+                        'codigoSituação' => 1, //1 Em Aberto - 2 Baixado - 3 Liquidado,
+                        'dataInicio' => $params['dataInicio'],
+                        'dataFim' => $params['dataFim'],
+                        'numeroCpfCnpj' => (int) $params['numeroCpfCnpj']
+                    ],
+                    'http_errors' => true // Para tratamento manual de erros
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
+        }
+    }
+
+    public function alterarDadosBoleto(array $fields, $nossoNumero)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
         try {
             $response = $this->client->request(
                 'PATCH',
-                "/cobranca-bancaria/v2/boletos/negativacoes",
-                $options,
+                "{$url}//cobranca-bancaria/v3/boletos/{$nossoNumero}",
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}"
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'body' => json_encode($fields),
+                ]
             );
             $statusCode = $response->getStatusCode();
             $result = json_decode($response->getBody()->getContents());
@@ -612,122 +387,41 @@ class BankingSicoobV3
             return ($responseBodyAsString);
         } catch (\Exception $e) {
             $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
+            return ['error' => "{$response}"];
         }
     }
 
-    public function baixarNegativarBoleto($boletos)
+    // Função auxiliar para processar mensagens de erro
+    private function parseErrorMessages($messages)
     {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'DELETE',
-                "/cobranca-bancaria/v2/boletos/negativacoes",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
+        $errors = [];
+        foreach ($messages as $message) {
+            $errors[] = [
+                'codigo' => $message->codigo ?? 'DESCONHECIDO',
+                'mensagem' => $message->mensagem ?? 'Erro não especificado'
+            ];
         }
+        return $errors;
     }
 
 
-    ######################################################
-    ############## PROTESTO ##############################
-    ######################################################
-    public function protestarBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'POST',
-                "/cobranca-bancaria/v2/boletos/protestos",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
 
-    public function cancelarProtestoBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'PATCH',
-                "/cobranca-bancaria/v2/boletos/protestos",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
 
-    public function desistirProtestoBoleto($boletos)
-    {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($boletos);
-        try {
-            $response = $this->client->request(
-                'DELETE',
-                "/cobranca-bancaria/v2/boletos/protestos",
-                $options,
-            );
-            $statusCode = $response->getStatusCode();
-            $result = json_decode($response->getBody()->getContents());
-            return array('status' => $statusCode, 'response' => $result);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $responseBodyAsString = json_decode($response->getBody()->getContents());
-            if ($responseBodyAsString == '') {
-                return ($response);
-            }
-            return ($responseBodyAsString);
-        } catch (\Exception $e) {
-            $response = $e->getMessage();
-            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
-        }
-    }
 
+
+
+
+
+
+
+
+
+
+
+
+    ##################################################################
+    ######### NÃO USAR V2 ############################################
+    ##################################################################
 
     ######################################################
     ########## MIVIMENTAÇÃO ##############################
@@ -841,5 +535,14 @@ class BankingSicoobV3
             $response = $e->getMessage();
             return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
         }
+    }
+
+    #####################################################################
+    ######## FIM - BOLETO ###############################################
+    #####################################################################
+
+    public function teste()
+    {
+        return 'conexão boleto sicoob realiado com sucesso';
     }
 }

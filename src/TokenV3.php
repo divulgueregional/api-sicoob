@@ -2,11 +2,8 @@
 
 namespace Divulgueregional\apisicoob;
 
-// use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-// use GuzzleHttp\Psr7\Message;
-// use JetBrains\PhpStorm\NoReturn;
 
 class TokenV3
 {
@@ -17,6 +14,7 @@ class TokenV3
     private $escope;
     function __construct($config)
     {
+        // print_r($config);
         $this->config = $config;
         $this->client = new Client([
             'base_uri' => 'https://auth.sicoob.com.br',
@@ -29,7 +27,6 @@ class TokenV3
             // 'verify' => false,
             'ssl_key' => $config['certificateKey'],
         ];
-        $this->escope = 'cobranca_boletos_consultar';
     }
 
     ##############################################
@@ -40,7 +37,7 @@ class TokenV3
         $options = $this->optionsRequest;
         $options['form_params'] = [
             'grant_type' => 'client_credentials',
-            'client_id' => '24d3810a-85b3-480a-9650-268c632c473a',
+            'client_id' => $this->config['client_id'],
             'scope' => $this->esope($this->config) //'cobranca_boletos_consultar'
         ];
         try {
@@ -67,34 +64,9 @@ class TokenV3
     private function esope($api)
     {
         if ($api['api'] == 'boleto') {
-            return 'cobranca_boletos_consultar cobranca_boletos_incluir cobranca_boletos_pagador cobranca_boletos_segunda_via cobranca_boletos_descontos cobranca_boletos_abatimentos cobranca_boletos_valor_nominal cobranca_boletos_seu_numero cobranca_boletos_especie_documento cobranca_boletos_baixa cobranca_boletos_rateio_credito cobranca_pagadores cobranca_boletos_negativacoes_incluir cobranca_boletos_negativacoes_alterar cobranca_boletos_negativacoes_baixar cobranca_boletos_protestos_incluir cobranca_boletos_protestos_alterar cobranca_boletos_protestos_desistir cobranca_boletos_solicitacao_movimentacao_incluir cobranca_boletos_solicitacao_movimentacao_consultar cobranca_boletos_solicitacao_movimentacao_download cobranca_boletos_prorrogacoes_data_vencimento cobranca_boletos_prorrogacoes_data_limite_pagamento cobranca_boletos_encargos_multas cobranca_boletos_encargos_juros_mora';
+            return 'boletos_inclusao boletos_consulta boletos_alteracao webhooks_alteracao webhooks_consulta webhooks_inclusao';
         } else if ($api['api'] == 'pix') {
             return 'cob.write cob.read cobv.write cobv.read lotecobv.write lotecobv.read pix.write pix.read webhook.read webhook.write payloadlocation.write payloadlocation.read';
         }
     }
-
-    // public function gerarToken($config)
-    // {
-    //     $this->urlToken = 'https://auth.sicoob.com.br/auth/realms/cooperado/protocol/openid-connect/token';
-    //     try {
-    //         $client2 = new \GuzzleHttp\Client();
-    //         $response = $client2->request('POST', $this->urlToken, [
-    //             'form_params' => [
-    //                 'grant_type' => 'client_credentials',
-    //                 'client_id' => '48c44f4d-ff78-431d-b59d-064cef41f70c',
-    //                 'scope' => 'cobranca_boletos_consultar'
-    //             ],
-    //             // 'cert' => '../path/certificado.pem',
-    //             // 'ssl_key' => '../path/chave.pem'
-    //             'cert' => $config['certificate'], 
-    //             // 'verify' => false,
-    //             'ssl_key' => $config['certificateKey'],
-    //         ]);
-    //         $this->token = $response->getBody()->getContents();
-    //         $this->timeToken = time();
-    //         return $this->token;
-    //     } catch (\Exception $exc) {
-    //         throw $exc;
-    //     }
-    // }
 }
