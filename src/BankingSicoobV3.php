@@ -163,11 +163,11 @@ class BankingSicoobV3
                     'query' => [
                         'numeroCliente' => (int) $params['numeroCliente'],
                         'codigoModalidade' => 1, //(int) 1,
-                        'nossoNumero' => $params['nossoNumero'],
+                        // 'nossoNumero' => $params['nossoNumero'],
                         'linhaDigitavel' => $params['linhaDigitavel'],
                         'codigoBarras' => $params['codigoBarras'],
-                        'gerarPdf' => true,
-                        'numeroContratoCobranca' => (int) $params['numeroContratoCobranca']
+                        'gerarPdf' => 'true',
+                        // 'numeroContratoCobranca' => (int) $params['numeroContratoCobranca']
                     ],
                     'http_errors' => true // Para tratamento manual de erros
                 ]
