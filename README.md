@@ -42,6 +42,13 @@ Acesse a pasta docs e leia o README.md
 - alterar dados do boleto
 - pdf do boleto
 
+<b>WEBHOOK</b><br>
+
+- criar
+- consultar
+- alterar
+- deletar
+
 <!-- <b>MOVIMENTAÇÃO</b><br>
 
 - solicitar movimentação

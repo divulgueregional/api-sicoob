@@ -404,7 +404,159 @@ class BankingSicoobV3
         return $errors;
     }
 
+    ######################################################
+    ############## WEBHOOK #############################
+    ######################################################
+    public function cadastrarWebhook(array $fields)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        try {
+            $response = $this->client->request(
+                'POST',
+                "{$url}/cobranca-bancaria/v3/webhooks",
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json',
+                        'client_id' => $this->client_id
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'body' => json_encode($fields),
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "{$response}"];
+        }
+    }
 
+    public function consultarWebhook($params)
+    {
+        try {
+            $response = $this->client->request(
+                'GET',
+                "/cobranca-bancaria/v3/webhooks?idWebhook={$params['idWebhook']}&codigoTipoMovimento=7",
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json'
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'http_errors' => true // Para tratamento manual de erros
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
+        }
+    }
+
+    public function alterarWebhook(array $fields, $idWebhook)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        try {
+            $response = $this->client->request(
+                'PATCH',
+                "{$url}/cobranca-bancaria/v3/webhooks/{$idWebhook}",
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json',
+                        'client_id' => $this->client_id
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'body' => json_encode($fields),
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "{$response}"];
+        }
+    }
+
+    public function deleteWebhook($idWebhook)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        try {
+            $response = $this->client->request(
+                'DELETE',
+                "{$url}/cobranca-bancaria/v3/webhooks/{$idWebhook}",
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json',
+                        'client_id' => $this->client_id
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "{$response}"];
+        }
+    }
 
 
 
