@@ -11,7 +11,6 @@ Serviço para comandar a baixa de boletos informados.<br>
 
     $config = [
         'api' => 'boleto', //boleto ou pix
-        'ambiente' => 'produção',
         'client_id' => $Post->cliente_id,
         'codigoBeneficiario' => $Post->contrato,
         'certificate' => './api-sicoob/path/certificado.pem',//local do certificado crt

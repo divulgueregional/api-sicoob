@@ -10,7 +10,6 @@ Serviço para consulta de um boleto bancário. Utiliza as informações do benef
 
     $config = [
         'api' => 'boleto', //boleto ou pix
-        'ambiente' => 'produção',
         'client_id' => $Post->cliente_id,
         'codigoBeneficiario' => $Post->contrato,
         'certificate' => './api-sicoob/path/certificado.pem',//local do certificado crt
