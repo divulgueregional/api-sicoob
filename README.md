@@ -19,7 +19,7 @@ composer require divulgueregional/api-sicoob
 Pela última tag: </b>
 
 ```php
-composer update divulgueregional/api-sicoob 1.1.5
+composer update divulgueregional/api-sicoob 1.1.6
 ```
 
 ## Documentação:
