@@ -561,7 +561,7 @@ class BankingSicoobV3
     ######################################################
     ############## PIX ###################################
     ######################################################
-    public function criarCobrancaPix(array $fields, $txid)
+    public function criarCobrancaTxIdPix(array $fields, $txid)
     {
         $url = '';
         if ($this->config->sandbox) {
@@ -599,7 +599,7 @@ class BankingSicoobV3
         }
     }
 
-    public function consultarCobrancaPix($txid)
+    public function consultarCobrancaTxIdPix($txid)
     {
         $url = '';
         if ($this->config->sandbox) {
@@ -613,6 +613,42 @@ class BankingSicoobV3
                     'headers' => [
                         'Authorization' => "Bearer {$this->token}",
                         'Accept' => 'application/json',
+                        'client_id' => $this->client_id
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "{$response}"];
+        }
+    }
+
+    public function obterQrCodePix($txid)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        try {
+            $response = $this->client->request(
+                'GET',
+                "{$url}/pix/api/v2/cob/{$txid}/imagem?largura=360",
+                [
+                    'headers' => [
+                        'Authorization' => "Bearer {$this->token}",
                         'client_id' => $this->client_id
                     ],
                     'cert' => $this->config->certificate,
@@ -921,5 +957,10 @@ class BankingSicoobV3
     public function teste()
     {
         return 'conexão boleto sicoob realiado com sucesso';
+    }
+
+    public function testePix()
+    {
+        return 'conexão pix sicoob realiado com sucesso';
     }
 }
