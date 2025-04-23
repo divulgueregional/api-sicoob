@@ -49,6 +49,13 @@ Acesse a pasta docs e leia o README.md
 - alterar
 - deletar
 
+<b>PIX txId</b><br>
+
+- criar
+- consultar
+- reltorio
+- deletar
+
 <!-- <b>MOVIMENTAÇÃO</b><br>
 
 - solicitar movimentação

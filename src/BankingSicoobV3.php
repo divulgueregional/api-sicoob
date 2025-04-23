@@ -558,8 +558,233 @@ class BankingSicoobV3
         }
     }
 
+    ######################################################
+    ############## PIX ###################################
+    ######################################################
+    public function criarCobrancaPix(array $fields, $txid)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        try {
+            $response = $this->client->request(
+                'PUT',
+                "{$url}/pix/api/v2/cob/{$txid}",
+                [
+                    'headers' => [
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json',
+                        'client_id' => $this->client_id
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'body' => json_encode($fields),
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "{$response}"];
+        }
+    }
 
+    public function consultarCobrancaPix($txid)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        try {
+            $response = $this->client->request(
+                'GET',
+                "{$url}/pix/api/v2/cob/{$txid}",
+                [
+                    'headers' => [
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json',
+                        'client_id' => $this->client_id
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "{$response}"];
+        }
+    }
 
+    ######################################################
+    ############## WEBHOOK PIX ###########################
+    ######################################################
+    public function cadastrarWebhookPix(array $fields, $chave)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        try {
+            $response = $this->client->request(
+                'PUT',
+                "{$url}/pix/api/v2/webhook/{$chave}",
+                [
+                    'headers' => [
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json',
+                        'client_id' => $this->client_id
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'body' => json_encode($fields),
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "{$response}"];
+        }
+    }
+
+    public function consultarWebhookPix($chave)
+    {
+        try {
+            $response = $this->client->request(
+                'GET',
+                "/pix/api/v2/webhook/$chave",
+                [
+                    'headers' => [
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json'
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'http_errors' => true // Para tratamento manual de erros
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "Falha ao consultar Boleto Cobranca: {$response}"];
+        }
+    }
+
+    public function webhookCadastradosPix(array $fields)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        try {
+            $response = $this->client->request(
+                'GET',
+                "{$url}/pix/api/v2/webhook?inicio={$fields['inicio']}T00:00:00Z&fim={$fields['fim']}T17:00:00Z&paginacao.paginaAtual=0&paginacao.itensPorPagina=100",
+                [
+                    'headers' => [
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json',
+                        'client_id' => $this->client_id
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                    'body' => json_encode($fields),
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "{$response}"];
+        }
+    }
+
+    public function deleteWebhookPix($chave)
+    {
+        $url = '';
+        if ($this->config->sandbox) {
+            $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
+        }
+        try {
+            $response = $this->client->request(
+                'DELETE',
+                "{$url}/pix/api/v2/webhook/{$chave}",
+                [
+                    'headers' => [
+                        'Authorization' => "Bearer {$this->token}",
+                        'Accept' => 'application/json',
+                        'client_id' => $this->client_id
+                    ],
+                    'cert' => $this->config->certificate,
+                    // 'verify' => false,
+                    'ssl_key' => $this->config->certificateKey,
+                ]
+            );
+            $statusCode = $response->getStatusCode();
+            $result = json_decode($response->getBody()->getContents());
+            return array('status' => $statusCode, 'response' => $result);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $responseBodyAsString = json_decode($response->getBody()->getContents());
+            if ($responseBodyAsString == '') {
+                return ($response);
+            }
+            return ($responseBodyAsString);
+        } catch (\Exception $e) {
+            $response = $e->getMessage();
+            return ['error' => "{$response}"];
+        }
+    }
 
 
 
