@@ -959,6 +959,7 @@ class BankingSicoobV3
         return 'conexão boleto sicoob realiado com sucesso';
     }
 
+    //testar api pix
     public function testePix()
     {
         return 'conexão pix sicoob realiado com sucesso';
