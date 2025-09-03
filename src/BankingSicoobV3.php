@@ -2,13 +2,8 @@
 
 namespace Divulgueregional\apisicoob;
 
-// use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-// use GuzzleHttp\Psr7\Message;
-// use JetBrains\PhpStorm\NoReturn;
-
-// use Divulgueregional\apisicoob\Token;
 require_once __DIR__ . '/TokenV3.php';
 
 class BankingSicoobV3
@@ -24,19 +19,15 @@ class BankingSicoobV3
 
     function __construct($config)
     {
-        // print_r($config);
-        // die;
         $this->config = (object) $config;
         $this->url = 'https://api.sicoob.com.br';
         if ($this->config->sandbox) {
             $this->url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
-            $this->token = '1301865f-c6bc-38f3-9f49-666dbcfc59c3';
-            $this->client_id = '9b5e603e428cc477a2841e2683c92d21';
+            $this->token = '';
+            $this->client_id = '';
         } else {
             $this->tokens = new TokenV3($config);
             $this->retornoTtoken = $this->tokens->getToken();
-            // print_r($this->retornoTtoken);
-            // die;
             $this->token = $this->retornoTtoken['access_token'];
             $this->client_id = $config['client_id'];
         }
@@ -68,10 +59,11 @@ class BankingSicoobV3
     ######################################################
     public function registrarBoleto(array $fields)
     {
-        $url = '';
+        $url = "";
         if ($this->config->sandbox) {
             $url = 'https://sandbox.sicoob.com.br/sicoob/sandbox';
         }
+
         try {
             $response = $this->client->request(
                 'POST',
@@ -88,6 +80,7 @@ class BankingSicoobV3
                     'body' => json_encode($fields),
                 ]
             );
+
             $statusCode = $response->getStatusCode();
             $result = json_decode($response->getBody()->getContents());
             return array('status' => $statusCode, 'response' => $result);
@@ -254,11 +247,6 @@ class BankingSicoobV3
         }
     }
 
-    /* $params = [
-        'numeroCliente' => (int) $dados->integracao_contrato,
-        'codigoModalidade' => (int) 1,
-        'nossoNumero' => $receber->boleto_nossoNumero,
-    ]; */
     public function baixaBoleto($params)
     {
         $baseUrl =  $this->url;
@@ -279,7 +267,6 @@ class BankingSicoobV3
                         'Accept' => 'application/json'
                     ],
                     'cert' => $this->config->certificate,
-                    // 'verify' => false,
                     'ssl_key' => $this->config->certificateKey,
                     'body' => json_encode([
                         'numeroCliente' => $numeroCliente,
@@ -841,15 +828,20 @@ class BankingSicoobV3
     ######################################################
     public function solicitarMovimentacao(array $filters)
     {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['body'] = json_encode($filters);
-        // print_r($options);die;
         try {
             $response = $this->client->request(
                 'POST',
-                "/cobranca-bancaria/v2/boletos/solicitacoes/movimentacao",
-                $options,
+                "/cobranca-bancaria/v3/boletos/movimentacoes",
+                [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}"
+                    ],
+                    'cert' => $this->config->certificate,
+                    'ssl_key' => $this->config->certificateKey,
+                    'body' => json_encode($filters),
+                ]
             );
             $statusCode = $response->getStatusCode();
             $result = json_decode($response->getBody()->getContents());
@@ -869,15 +861,20 @@ class BankingSicoobV3
 
     public function consultarMovimentacao(array $filters)
     {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['query'] = $filters;
-        // print_r($options);die;
         try {
             $response = $this->client->request(
                 'GET',
-                "/cobranca-bancaria/v2/boletos/solicitacoes/movimentacao",
-                $options,
+                "/cobranca-bancaria/v3/boletos/movimentacoes",
+                [
+                    'headers' => [
+                        //'Content-Type' => 'application/json',
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}"
+                    ],
+                    'cert' => $this->config->certificate,
+                    'ssl_key' => $this->config->certificateKey,
+                    'query' => $filters,
+                ]
             );
             $statusCode = $response->getStatusCode();
             $result = json_decode($response->getBody()->getContents());
@@ -897,15 +894,20 @@ class BankingSicoobV3
 
     public function downloadMovimentacao(array $filters)
     {
-        $options = $this->optionsRequest;
-        $options['headers']['Authorization'] = "Bearer {$this->token}";
-        $options['query'] = $filters;
-        // print_r($options);die;
         try {
             $response = $this->client->request(
                 'GET',
-                "/cobranca-bancaria/v2/boletos/solicitacoes/movimentacao-download",
-                $options,
+                "/cobranca-bancaria/v3/boletos/movimentacoes/download",
+                [
+                    'headers' => [
+                        //'Content-Type' => 'application/json',
+                        'client_id' => $this->client_id,
+                        'Authorization' => "Bearer {$this->token}"
+                    ],
+                    'cert' => $this->config->certificate,
+                    'ssl_key' => $this->config->certificateKey,
+                    'query' => $filters,
+                ]
             );
             $statusCode = $response->getStatusCode();
             $result = json_decode($response->getBody()->getContents());
